@@ -30,10 +30,12 @@ from sklearn.metrics import (
 )
 
 
-def load_and_clean_data(csv_path="data/breast_cancer.csv"):
-    if not os.path.exists(csv_path):
-        csv_path = "breast_cancer.csv"
-    
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def load_and_clean_data(csv_path=None):
+    if csv_path is None:
+        csv_path = os.path.join(ROOT_DIR, "data", "breast_cancer.csv")
+
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"Dataset not found at {csv_path}")
 
