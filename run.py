@@ -1,48 +1,131 @@
+
 """
-Unified Application Launcher for Breast Cancer Clinical Decision Support System (CDSS)
+Unified Application Launcher for OncoVision AI.
+
+Breast Cancer Clinical Decision Support System
+Research Prototype
 """
 
 import os
 import sys
 
-# Ensure workspace root is in python path
+# --------------------------------------------------
+# PROJECT ROOT
+# --------------------------------------------------
+
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from backend.train import train_and_evaluate
+
+# --------------------------------------------------
+# IMPORT FLASK APPLICATION
+# --------------------------------------------------
+
 from backend.app import app
 
 
+# --------------------------------------------------
+# APPLICATION LAUNCHER
+# --------------------------------------------------
+
 def main():
+
     print("=" * 65)
-    print("  ONCOVISION AI: Breast Cancer Diagnostic Decision Support System")
+
+    print(
+        "  ONCOVISION AI: Breast Cancer "
+        "Decision Support System"
+    )
+
     print("  Clinical AI Research Prototype")
+
     print("=" * 65)
 
-    # Verify model artifact exists
-    model_path = os.path.join(ROOT_DIR, "models", "breast_cancer_model.joblib")
-    if not os.path.exists(model_path):
-        print("\n[+] Model artifact not detected. Initiating initial training pipeline...")
-        train_and_evaluate(
-            csv_path=os.path.join(ROOT_DIR, "data", "breast_cancer.csv"),
-            output_dir=os.path.join(ROOT_DIR, "models")
+    # Verify that the trained model exists.
+    model_path = os.path.join(
+        ROOT_DIR,
+        "models",
+        "breast_cancer_model.joblib"
+    )
+
+    if not os.path.isfile(model_path):
+
+        print(
+            "\n[ERROR] Trained model artifact not found."
         )
-    else:
-        print("\n[+] Verified trained model artifact: models/breast_cancer_model.joblib")
 
-    host = os.environ.get("HOST", "0.0.0.0")
-    port = int(os.environ.get("PORT", 5000))
-    debug = os.environ.get("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
-    print(f"\n[+] Starting Clinical Web Application Server...")
-    print(f"    -> Access URL: http://{host}:{port}")
-    print(f"    -> Health API: http://{host}:{port}/health")
-    print(f"    -> Metadata:   http://{host}:{port}/api/metadata")
-    print("\nPress Ctrl+C to terminate server.\n" + "=" * 65 + "\n")
+        print(
+            "Expected location: models/breast_cancer_model.joblib"
+        )
 
-    app.run(host=host, port=port, debug=debug)
+        print(
+            "Train the model locally and commit the generated "
+            "model artifacts before starting the application."
+        )
 
+        sys.exit(1)
+
+    print(
+        "\n[+] Verified trained model artifact:"
+    )
+
+    print(
+        "    models/breast_cancer_model.joblib"
+    )
+
+    # Server configuration.
+    host = os.environ.get(
+        "HOST",
+        "0.0.0.0"
+    )
+
+    port = int(
+        os.environ.get("PORT", "5000")
+    )
+
+    debug = (
+        os.environ.get("FLASK_DEBUG", "0").lower()
+        in ("1", "true", "yes")
+    )
+
+    print(
+        "\n[+] Starting OncoVision AI application..."
+    )
+
+    print(
+        f"    -> Host: {host}"
+    )
+
+    print(
+        f"    -> Port: {port}"
+    )
+
+    print(
+        f"    -> Health API: http://localhost:{port}/health"
+    )
+
+    print(
+        f"    -> Metadata API: http://localhost:{port}/api/metadata"
+    )
+
+    print(
+        "\nPress Ctrl+C to terminate the server."
+    )
+
+    print("=" * 65)
+
+    app.run(
+        host=host,
+        port=port,
+        debug=debug
+    )
+
+
+# --------------------------------------------------
+# ENTRY POINT
+# --------------------------------------------------
 
 if __name__ == "__main__":
     main()
-
