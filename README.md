@@ -1,156 +1,216 @@
-# OncoVision AI: Breast Cancer Diagnostic Decision Support System (CDSS)
 
-An end-to-end, clinically-informed machine learning web application prototype for Fine Needle Aspirate (FNA) breast cytology analysis, risk stratification, and patient triage.
+# OncoVision AI – Breast Cancer Decision Support Prototype
 
-> **CLINICAL NOTICE & DISCLAIMER:**
-> This software is a research prototype designed to demonstrate machine learning-assisted clinical decision support. It is not approved as a primary diagnostic device. All AI assessments must be correlated with clinical examination, radiological imaging (BI-RADS), and histopathological evaluation by a certified pathologist.
+An end-to-end machine learning web application prototype for exploring breast cancer classification using the Wisconsin Breast Cancer Diagnostic Dataset.
 
----
-
-## 🔬 Clinical Overview & Dataset
-
-The system is trained on the **Wisconsin Breast Cancer Diagnostic Dataset (WDBC)** collected by Dr. William H. Wolberg, W. Nick Street, and Olvi L. Mangasarian from the University of Wisconsin Hospitals, Madison.
-
-The dataset comprises **569 patient FNA biopsies** characterized across **30 nuclear morphometric attributes**:
-- **10 Core Nuclear Properties**: Radius, Texture, Perimeter, Area, Smoothness, Compactness, Concavity, Concave Points, Symmetry, Fractal Dimension.
-- **3 Metric Perspectives**: Mean values, Standard Error (SE) variances, and Worst/Extreme measurements.
-
-### Top 10 High-Impact Diagnostic Biomarkers (ANOVA F-Score Ranking)
-Using **SelectKBest with ANOVA F-test (`f_classif`)**, the most decisive morphological factors distinguishing benign from malignant lesions were identified:
-1. `concave points_worst` (F-score: 964.4)
-2. `perimeter_worst` (F-score: 897.9)
-3. `concave points_mean` (F-score: 861.7)
-4. `radius_worst` (F-score: 860.8)
-5. `perimeter_mean` (F-score: 697.2)
-6. `area_worst` (F-score: 661.6)
-7. `radius_mean` (F-score: 647.0)
-8. `area_mean` (F-score: 573.1)
-9. `concavity_mean` (F-score: 533.8)
-10. `concavity_worst` (F-score: 436.7)
+> **Research Prototype Disclaimer**
+>
+> This application is for educational and research demonstration only. It is not a medical device and must not be used to diagnose, screen, triage, or make treatment decisions for patients. Model predictions are not clinical diagnoses. Real medical decisions must be made by qualified healthcare professionals using appropriate clinical examinations and validated diagnostic procedures.
 
 ---
 
-## 📊 Validated Model Performance Metrics
+## Dataset
 
-Evaluated on an **80/20 stratified holdout test split** ($N = 114$ patients):
+This project uses the Wisconsin Breast Cancer Diagnostic (WDBC) dataset.
 
-| Metric | Score | Clinical Interpretation |
-| :--- | :--- | :--- |
-| **Testing Accuracy** | **95.61%** | Overall correct classification rate |
-| **ROC-AUC** | **0.9974** | Near-perfect discriminative probability ranking |
-| **Sensitivity (Recall)** | **90.48%** | Minimized false negatives to prevent missed malignancies |
-| **Specificity** | **98.61%** | Low false positives (FP = 1) to avoid unnecessary biopsies |
-| **Precision (PPV)** | **97.44%** | Reliability of positive malignant predictions |
-| **F1-Score** | **93.83%** | Harmonic balance between sensitivity and precision |
-| **Brier Score** | **0.0381** | Well-calibrated probabilistic output |
+- 569 observations
+- 30 numerical features
+- Two original dataset classes: benign and malignant
 
-### Holdout Confusion Matrix ($N = 114$)
-| | Predicted Benign (0) | Predicted Malignant (1) |
-| :--- | :---: | :---: |
-| **Actual Benign (B)** | **71 (True Negative)** | **1 (False Positive)** |
-| **Actual Malignant (M)** | **4 (False Negative)** | **38 (True Positive)** |
+The features describe ten nuclear characteristics:
+
+- Radius
+- Texture
+- Perimeter
+- Area
+- Smoothness
+- Compactness
+- Concavity
+- Concave points
+- Symmetry
+- Fractal dimension
+
+Each characteristic has three measurements:
+
+- Mean
+- Standard error
+- Worst value
+
+## Machine Learning Pipeline
+
+The project uses a scikit-learn pipeline containing:
+
+1. Missing-value imputation
+2. ANOVA-based feature selection using `SelectKBest` and `f_classif`
+3. Feature scaling using `StandardScaler`
+4. Logistic Regression classification
+
+The training script evaluates the model using a stratified train/test split and calculates metrics such as accuracy, precision, recall, F1-score, ROC-AUC, log loss, Brier score, and confusion matrix.
+
+Reported performance depends on the exact dataset, split, and trained model artifacts. These results are experimental and do not establish clinical validity or suitability for patient care.
 
 ---
 
-## 🏛️ Project Directory Structure
+## Project Structure
 
 ```text
-Creast_cancer/
+OncoVision-AI/
 ├── backend/
 │   ├── __init__.py
-│   ├── app.py                 # Flask REST API server (routes, CORS, batch processing)
-│   ├── model_service.py       # Inference engine, XAI feature attribution, validation
-│   ├── train.py               # Reproducible pipeline training & metrics calculation
-│   └── data_utils.py          # Clinical feature definitions, normal ranges, presets
-├── models/
-│   ├── breast_cancer_model.joblib  # Serialized scikit-learn pipeline
-│   ├── model_metadata.json    # Version-locked accuracy, AUC, confusion matrix
-│   ├── selected_features.json # Top 10 ANOVA biomarkers
-│   └── feature_stats.json     # Population percentiles and reference baselines
+│   ├── app.py
+│   ├── model_service.py
+│   ├── train.py
+│   └── data_utils.py
 ├── frontend/
-│   ├── templates/
-│   │   └── index.html         # Responsive, medical-grade UI
-│   └── static/
-│       ├── css/style.css      # Clinical styling, print stylesheets
-│       └── js/app.js          # Interactive controllers, XAI charts, batch triage
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+├── models/
+│   ├── breast_cancer_model.joblib
+│   ├── model_metadata.json
+│   ├── selected_features.json
+│   └── feature_stats.json
 ├── data/
-│   └── breast_cancer.csv      # Clean Wisconsin diagnostic dataset
+│   └── breast_cancer.csv
 ├── notebooks/
-│   └── BrestCancer_Diagnosis.ipynb # Original research notebook
+│   └── BrestCancer_Diagnosis.ipynb
 ├── tests/
-│   └── test_api.py            # Comprehensive unit and integration test suite
-├── run.py                     # Unified single-command application launcher
-├── requirements.txt           # Project dependencies
-└── README.md                  # Clinical and technical documentation
+│   └── test_api.py
+├── .gitignore
+├── Procfile
+├── render.yaml
+├── requirements.txt
+├── run.py
+└── README.md
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## Requirements
 
-### 1. Requirements
-- Python 3.10+ (Tested on Python 3.13)
-- Required libraries listed in `requirements.txt`:
-  ```bash
-  pip install -r requirements.txt
-  ```
+- Python 3.11
+- Dependencies listed in `requirements.txt`
 
-### 2. Launch the Application
-Run the unified launcher:
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Run Locally
+
+Ensure the trained model artifacts are available in the `models/` directory.
+
+Start the application:
+
 ```bash
 python run.py
 ```
-Open your browser and navigate to:
+
+Open:
+
 ```text
 http://127.0.0.1:5000
 ```
 
-### 3. Run Automated Tests
-Execute the automated test suite covering model loading, prediction logic, edge cases, and REST endpoints:
+## Run Tests
+
 ```bash
 python -m unittest tests/test_api.py
 ```
 
 ---
 
-## 🩺 Clinical Features & Workflow
+## Application Features
 
-### 1. Dual Diagnostic Input Modes
-- **Top 10 High-Impact Biomarkers (Quick Mode)**: Optimized for fast entry using the 10 ANOVA-selected features. Secondary features are imputed with Wisconsin population medians.
-- **Full 30-Parameter FNA Cytology Panel**: Grouped into collapsible tabs (*Means*, *Standard Errors*, *Worst Values*) with unit specifications, physiological ranges, and anomaly alerts.
+### 1. Dual Input Modes
 
-### 2. One-Click Clinical Presets
-- 🟢 **Case 1: Typical Benign Lesion (Fibroadenoma)** — Demonstrates low risk output (< 25% malignancy).
-- 🔴 **Case 2: Invasive Ductal Carcinoma (High Grade)** — Demonstrates high risk output (> 90% malignancy).
-- 🟡 **Case 3: Borderline / Atypical Cell Feature** — Demonstrates the AI uncertainty alert for gray-zone cases near the 50% decision boundary.
+- Quick mode: Enter the selected top 10 model features.
+- Full mode: Enter all 30 dataset features.
 
-### 3. Explainable AI (XAI) Biomarker Attribution
-- Displays individual patient measurements compared side-by-side against **Benign Cohort Medians** and **Malignant Cohort Medians**.
-- Visual spread bars show the relative percentile within the known population.
-- Identifies specific cytological drivers (e.g. "Severe Concavity", "Nuclear Hypertrophy").
+In Quick mode, missing model inputs are handled by the configured preprocessing pipeline.
 
-### 4. Population Batch Triage Screening
-- Upload a multi-patient CSV or click **"Load Wisconsin Demo Batch"**.
-- Automated triage highlights:
-  - High Risk patients needing immediate oncology consultation.
-  - Borderline cases requiring repeat biopsy or pathologist review.
-  - Low Risk routine screening cases.
+### 2. Example Preset Cases
 
-### 5. Printable Clinical Record Export
-- Click **"Print Clinical Summary"** to generate a clean, header-formatted medical summary ready for physical inclusion in patient charts or PDF export.
+The application includes three illustrative examples:
+
+- Benign-labeled example
+- Malignant-labeled example
+- Intermediate-probability example
+
+These are demonstration inputs, not real patient records or validated clinical cases.
+
+### 3. Model Explanation
+
+The interface compares entered measurements with benign and malignant dataset reference statistics.
+
+These comparisons are descriptive explanations, not validated causal explanations or formal SHAP feature attributions.
+
+### 4. Batch Prediction
+
+Upload a CSV file containing multiple feature records or use the provided demonstration dataset.
+
+The application displays model predictions and probability-based categories for each record.
+
+These categories are for software demonstration only and must not be interpreted as clinical triage decisions.
+
+### 5. Printable Summary
+
+The application provides a printable summary of model output for demonstration and educational purposes.
+
+It is not a medical report or a substitute for a professional diagnostic report.
 
 ---
 
-## 🌐 REST API Endpoints
+## REST API
 
 | Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/health` | Service health status and model readiness |
-| `GET` | `/api/metadata` | Model performance metrics, confusion matrix, feature list |
-| `GET` | `/api/feature-stats` | Reference distribution baselines for all 30 features |
-| `GET` | `/api/presets` | Preset clinical test cases |
-| `POST` | `/api/predict` | Single patient inference, risk assessment, and XAI breakdown |
-| `POST` | `/api/predict-batch` | Batch CSV screening or array of patient records |
-| `GET` | `/api/sample-csv` | Downloadable CSV template for batch screening |
-| `POST` | `/api/retrain` | Triggers retraining and live reload of model artifacts |
+|---|---|---|
+| GET | `/health` | Application and model readiness |
+| GET | `/api/metadata` | Model metadata |
+| GET | `/api/feature-stats` | Feature reference statistics |
+| GET | `/api/presets` | Demonstration preset cases |
+| POST | `/api/predict` | Single-record prediction |
+| POST | `/api/predict-batch` | Batch predictions |
+| GET | `/api/sample-csv` | Download sample CSV |
+| POST | `/api/retrain` | Disabled in the deployed application |
 
+---
+
+## Deployment
+
+This project is configured for deployment as a Python Flask web service on Render.
+
+The application uses Gunicorn as its production server.
+
+Start command:
+
+```bash
+gunicorn --bind 0.0.0.0:$PORT run:app
+```
+
+The trained model artifacts must be available in the repository before deployment.
+
+---
+
+## Technologies Used
+
+- Python
+- Flask
+- Scikit-learn
+- Pandas
+- NumPy
+- Joblib
+- HTML
+- CSS
+- JavaScript
+- Gunicorn
+- Render
+
+---
+
+## Project Purpose
+
+OncoVision AI demonstrates how machine learning, data preprocessing, model evaluation, and web application development can be combined into an educational decision-support prototype.
+
+**This project is not intended for real-world medical diagnosis or patient management.**
