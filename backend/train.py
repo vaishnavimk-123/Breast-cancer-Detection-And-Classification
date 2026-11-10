@@ -1,6 +1,7 @@
+
 """
 Breast Cancer Diagnostic Model Training Pipeline
-Reproducible training script with comprehensive clinical performance metrics.
+Reproducible training script with performance metrics.
 """
 
 import os
@@ -23,7 +24,6 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     confusion_matrix,
-    classification_report,
     roc_auc_score,
     log_loss,
     brier_score_loss,
@@ -31,6 +31,7 @@ from sklearn.metrics import (
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def load_and_clean_data(csv_path=None):
     if csv_path is None:
@@ -51,21 +52,38 @@ def load_and_clean_data(csv_path=None):
         .str.upper()
         .map({"B": 0, "M": 1})
     )
+
     df = df.dropna(subset=["diagnosis"]).copy()
     df["diagnosis"] = df["diagnosis"].astype(int)
 
-    X = df.drop(columns=["diagnosis"]).select_dtypes(include=np.number).dropna(axis=1, how="all")
+    X = (
+        df.drop(columns=["diagnosis"])
+        .select_dtypes(include=np.number)
+        .dropna(axis=1, how="all")
+    )
     y = df["diagnosis"]
 
     return df, X, y
 
 
-def train_and_evaluate(csv_path="data/breast_cancer.csv", output_dir="models"):
+def train_and_evaluate(csv_path=None, output_dir=None):
+
+    if csv_path is None:
+        csv_path = os.path.join(ROOT_DIR, "data", "breast_cancer.csv")
+
+    if output_dir is None:
+        output_dir = os.path.join(ROOT_DIR, "models")
+
     os.makedirs(output_dir, exist_ok=True)
+
     df, X, y = load_and_clean_data(csv_path)
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.20, random_state=42, stratify=y
+        X,
+        y,
+        test_size=0.20,
+        random_state=42,
+        stratify=y
     )
 
     k_features = min(10, X_train.shape[1])
@@ -79,12 +97,12 @@ def train_and_evaluate(csv_path="data/breast_cancer.csv", output_dir="models"):
 
     pipeline.fit(X_train, y_train)
 
-    # Evaluate
+    # Evaluation
     y_train_pred = pipeline.predict(X_train)
     y_test_pred = pipeline.predict(X_test)
     y_test_prob = pipeline.predict_proba(X_test)[:, 1]
 
-    # Metrics
+    # Performance metrics
     train_acc = float(accuracy_score(y_train, y_train_pred))
     test_acc = float(accuracy_score(y_test, y_test_pred))
     precision = float(precision_score(y_test, y_test_pred, zero_division=0))
@@ -94,41 +112,56 @@ def train_and_evaluate(csv_path="data/breast_cancer.csv", output_dir="models"):
     loss = float(log_loss(y_test, y_test_prob))
     brier = float(brier_score_loss(y_test, y_test_prob))
 
-    cm = confusion_matrix(y_test, y_test_pred)
-    # cm: [[TN, FP], [FN, TP]]
-    tn, fp, fn, tp = int(cm[0, 0]), int(cm[0, 1]), int(cm[1, 0]), int(cm[1, 1])
+    cm = confusion_matrix(y_test, y_test_pred, labels=[0, 1])
+    tn, fp, fn, tp = (
+        int(cm[0, 0]),
+        int(cm[0, 1]),
+        int(cm[1, 0]),
+        int(cm[1, 1])
+    )
 
-    # Specificity & Sensitivity
-    sensitivity = recall  # TP / (TP + FN)
+    sensitivity = recall
     specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
 
     # Selected features
     selector = pipeline.named_steps["feature_selection"]
     selected_mask = selector.get_support()
     all_feature_names = list(X_train.columns)
-    selected_features = [f for f, s in zip(all_feature_names, selected_mask) if s]
+
+    selected_features = [
+        feature
+        for feature, selected in zip(all_feature_names, selected_mask)
+        if selected
+    ]
 
     scores = selector.scores_
     feature_importance_list = []
-    for feat, score in zip(all_feature_names, scores):
-        feature_importance_list.append({
-            "feature": feat,
-            "f_score": float(score) if not np.isnan(score) else 0.0,
-            "selected": bool(feat in selected_features)
-        })
-    feature_importance_list.sort(key=lambda x: x["f_score"], reverse=True)
 
-    # Calculate distributions for each feature
+    for feature, score in zip(all_feature_names, scores):
+        feature_importance_list.append({
+            "feature": feature,
+            "f_score": float(score) if np.isfinite(score) else 0.0,
+            "selected": feature in selected_features
+        })
+
+    feature_importance_list.sort(
+        key=lambda item: item["f_score"],
+        reverse=True
+    )
+
+    # Feature statistics
     feature_stats = {}
-    for feat in all_feature_names:
-        benign_vals = df[df["diagnosis"] == 0][feat]
-        malignant_vals = df[df["diagnosis"] == 1][feat]
-        feature_stats[feat] = {
-            "min": float(df[feat].min()),
-            "max": float(df[feat].max()),
-            "mean": float(df[feat].mean()),
-            "median": float(df[feat].median()),
-            "std": float(df[feat].std()),
+
+    for feature in all_feature_names:
+        benign_vals = df.loc[df["diagnosis"] == 0, feature]
+        malignant_vals = df.loc[df["diagnosis"] == 1, feature]
+
+        feature_stats[feature] = {
+            "min": float(df[feature].min()),
+            "max": float(df[feature].max()),
+            "mean": float(df[feature].mean()),
+            "median": float(df[feature].median()),
+            "std": float(df[feature].std()),
             "benign_mean": float(benign_vals.mean()),
             "benign_median": float(benign_vals.median()),
             "benign_std": float(benign_vals.std()),
@@ -162,7 +195,7 @@ def train_and_evaluate(csv_path="data/breast_cancer.csv", output_dir="models"):
                 "true_negative": tn,
                 "false_positive": fp,
                 "false_negative": fn,
-                "true_positive": tp,
+                "true_positive": tp
             }
         },
         "all_features": all_feature_names,
@@ -170,43 +203,61 @@ def train_and_evaluate(csv_path="data/breast_cancer.csv", output_dir="models"):
         "feature_ranking": feature_importance_list[:15]
     }
 
-    # Save artifacts
-    model_path = os.path.join(output_dir, "breast_cancer_model.joblib")
-    joblib.dump(pipeline, model_path)
+    # Save model artifacts
+    joblib.dump(
+        pipeline,
+        os.path.join(output_dir, "breast_cancer_model.joblib")
+    )
 
-    metadata_path = os.path.join(output_dir, "model_metadata.json")
-    with open(metadata_path, "w", encoding="utf-8") as f:
-        json.dump(metadata, f, indent=2)
+    with open(
+        os.path.join(output_dir, "model_metadata.json"),
+        "w",
+        encoding="utf-8"
+    ) as file:
+        json.dump(metadata, file, indent=2)
 
-    features_path = os.path.join(output_dir, "selected_features.json")
-    with open(features_path, "w", encoding="utf-8") as f:
-        json.dump(selected_features, f, indent=2)
+    with open(
+        os.path.join(output_dir, "selected_features.json"),
+        "w",
+        encoding="utf-8"
+    ) as file:
+        json.dump(selected_features, file, indent=2)
 
-    stats_path = os.path.join(output_dir, "feature_stats.json")
-    with open(stats_path, "w", encoding="utf-8") as f:
-        json.dump(feature_stats, f, indent=2)
+    with open(
+        os.path.join(output_dir, "feature_stats.json"),
+        "w",
+        encoding="utf-8"
+    ) as file:
+        json.dump(feature_stats, file, indent=2)
 
-    # Also keep root files synchronized so legacy callers work
+    # Save legacy files in repository root
     try:
-        with open("breast_cancer_model.pkl", "wb") as f:
-            pickle.dump(pipeline, f, protocol=4)
-        with open("selected_features.pkl", "wb") as f:
-            pickle.dump(selected_features, f, protocol=4)
-    except Exception as e:
-        print(f"Notice: Could not write legacy root pkl files: {e}")
+        with open(
+            os.path.join(ROOT_DIR, "breast_cancer_model.pkl"), "wb"
+        ) as file:
+            pickle.dump(pipeline, file, protocol=4)
 
+        with open(
+            os.path.join(ROOT_DIR, "selected_features.pkl"), "wb"
+        ) as file:
+            pickle.dump(selected_features, file, protocol=4)
+
+    except Exception as error:
+        print(f"Notice: Could not write legacy files: {error}")
+
+    # Display results
     print("==========================================")
     print("Model Training & Evaluation Successful!")
-    print(f"Training Accuracy:   {train_acc * 100:.2f}%")
-    print(f"Testing Accuracy:    {test_acc * 100:.2f}%")
-    print(f"Sensitivity (Recall):{sensitivity * 100:.2f}%")
-    print(f"Specificity:         {specificity * 100:.2f}%")
-    print(f"Precision:           {precision * 100:.2f}%")
-    print(f"F1-Score:            {f1 * 100:.2f}%")
-    print(f"ROC-AUC:             {auc:.4f}")
-    print(f"Confusion Matrix:    TN={tn}, FP={fp}, FN={fn}, TP={tp}")
-    print("Selected Features (Top 10):", selected_features)
-    print(f"Saved artifacts to {output_dir}/")
+    print(f"Training Accuracy:    {train_acc * 100:.2f}%")
+    print(f"Testing Accuracy:     {test_acc * 100:.2f}%")
+    print(f"Sensitivity (Recall): {sensitivity * 100:.2f}%")
+    print(f"Specificity:          {specificity * 100:.2f}%")
+    print(f"Precision:            {precision * 100:.2f}%")
+    print(f"F1-Score:             {f1 * 100:.2f}%")
+    print(f"ROC-AUC:              {auc:.4f}")
+    print(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
+    print("Selected Features:", selected_features)
+    print(f"Saved artifacts to: {output_dir}")
     print("==========================================")
 
     return metadata
@@ -214,4 +265,3 @@ def train_and_evaluate(csv_path="data/breast_cancer.csv", output_dir="models"):
 
 if __name__ == "__main__":
     train_and_evaluate()
-
