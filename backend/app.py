@@ -18,8 +18,9 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(
     __name__,
-    template_folder=os.path.join(ROOT_DIR, "frontend", "templates"),
-    static_folder=os.path.join(ROOT_DIR, "frontend", "static")
+    template_folder=os.path.join(ROOT_DIR, "frontend"),
+    static_folder=os.path.join(ROOT_DIR, "frontend"),
+    static_url_path="/"
 )
 CORS(app)
 
