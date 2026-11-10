@@ -1,0 +1,174 @@
+/* OncoVision AI - Clinical Diagnostic Decision Support System Styling */
+
+:root {
+  --primary-color: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-light: #e0f2fe;
+  --secondary-color: #0f172a;
+  --accent-teal: #0d9488;
+  --bg-slate: #f8fafc;
+  --card-bg: #ffffff;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  
+  --benign-color: #059669;
+  --benign-light: #ecfdf5;
+  --benign-border: #a7f3d0;
+
+  --malignant-color: #dc2626;
+  --malignant-light: #fef2f2;
+  --malignant-border: #fecaca;
+
+  --warning-color: #d97706;
+  --warning-light: #fffbeb;
+  --warning-border: #fde68a;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-slate);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glass & Card Styles */
+.clinical-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease-in-out;
+}
+
+.clinical-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+/* Input styling */
+.form-input-group {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.form-input-group:focus-within label {
+  color: var(--primary-color);
+}
+
+.form-control-clinical {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control-clinical:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+/* Tab Navigation */
+.nav-tab-btn {
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  font-size: 0.925rem;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nav-tab-btn:hover {
+  color: var(--primary-color);
+}
+
+.nav-tab-btn.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Status Badges */
+.badge-benign {
+  background-color: var(--benign-light);
+  color: var(--benign-color);
+  border: 1px solid var(--benign-border);
+}
+
+.badge-malignant {
+  background-color: var(--malignant-light);
+  color: var(--malignant-color);
+  border: 1px solid var(--malignant-border);
+}
+
+.badge-warning {
+  background-color: var(--warning-light);
+  color: var(--warning-color);
+  border: 1px solid var(--warning-border);
+}
+
+/* Gauge / Probability Meter */
+.meter-container {
+  height: 14px;
+  border-radius: 9999px;
+  background-color: #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
+
+.meter-fill {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Pulse Animation for High Risk */
+@keyframes pulse-danger {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.urgent-pulse {
+  animation: pulse-danger 2s infinite ease-in-out;
+}
+
+/* Tooltip helper */
+.clinical-tooltip {
+  cursor: help;
+  border-bottom: 1px dotted #94a3b8;
+}
+
+/* Print Styling for Clinical Record Export */
+@media print {
+  body {
+    background-color: #ffffff;
+    font-size: 11pt;
+    color: #000;
+  }
+  
+  header, nav, .no-print, button, .tab-buttons {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .clinical-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .results-panel {
+    display: block !important;
+    width: 100% !important;
+  }
+}
+

@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OncoVision AI - Breast Cancer Diagnostic Decision Support System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22 0%22 100%22 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+    <!-- Top Medical Regulatory / Research Disclaimer Banner -->
+    <aside aria-label="Clinical Disclaimer" class="bg-amber-500 text-amber-950 px-4 py-2 text-xs font-medium border-b border-amber-600/30 flex items-center justify-between no-print">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-sm">⚠️</span>
+                <span>
+                    <strong>CLINICAL DECISION SUPPORT PROTOTYPE:</strong> 
+                    This AI system is developed for investigational clinical decision support. All predictions must be correlated with histopathological biopsy, imaging (BI-RADS), and expert pathologist examination.
+                </span>
+            </div>
+            <span class="text-[10px] uppercase font-bold tracking-wider bg-amber-600/20 px-2 py-0.5 rounded">Research Mode</span>
+        </div>
+    </aside>
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+        <div class="container mx-auto px-4 py-3 flex flex-wrap items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-md">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-lg font-bold text-slate-900 tracking-tight">OncoVision <span class="text-sky-600 font-extrabold">AI</span></h1>
+                        <span class="text-[10px] font-semibold bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full">v2.0 CDSS</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Fine Needle Aspirate (FNA) Breast Cytopathology Decision Support</p>
+                </div>
+            </div>
+
+            <!-- Model Status Pill -->
+            <div id="model-status-badge" class="mt-2 sm:mt-0">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                    <span class="w-2 h-2 mr-1.5 bg-slate-400 rounded-full animate-ping"></span>
+                    Initializing Engine...
+                </span>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs Bar -->
+        <nav aria-label="Main Navigation" class="container mx-auto px-4 flex border-t border-slate-100 tab-buttons overflow-x-auto">
+            <button class="nav-tab-btn active" data-target="tab-diagnostic">
+                <span class="flex items-center space-x-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Diagnostic Assessment</span>
+                </span>
+            </button>
+            <button class="nav-tab-btn" data-target="tab-batch">
+                <span class="flex items-center space-x-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm0 5h16"/></svg>
+                    <span>Batch Triage Screening</span>
+                </span>
+            </button>
+            <button class="nav-tab-btn" data-target="tab-analytics">
+                <span class="flex items-center space-x-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span>Model Analytics & Validation</span>
+                </span>
+            </button>
+            <button class="nav-tab-btn" data-target="tab-about">
+                <span class="flex items-center space-x-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Clinical Reference & Protocol</span>
+                </span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow container mx-auto px-4 py-6">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: DIAGNOSTIC ASSESSMENT               -->
+        <!-- ========================================== -->
+        <section id="tab-diagnostic" class="tab-content-section">
+            
+            <!-- Quick Preset Controls Bar -->
+            <div class="clinical-card p-4 mb-6 bg-white flex flex-wrap items-center justify-between gap-4 no-print">
+                <div class="flex items-center space-x-2 flex-grow max-w-lg">
+                    <label for="preset-case-select" class="text-xs font-semibold text-slate-700 whitespace-nowrap">Load Preset Case:</label>
+                    <select id="preset-case-select" class="form-control-clinical text-xs py-1.5">
+                        <option value="">Loading Clinical Cases...</option>
+                    </select>
+                </div>
+
+                <!-- Input Mode Toggle -->
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl">
+                    <button type="button" id="btn-mode-quick" class="px-4 py-2 text-sm font-semibold rounded-lg bg-sky-600 text-white shadow-sm">
+                        Top 10 Biomarkers (ANOVA)
+                    </button>
+                    <button type="button" id="btn-mode-all" class="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200">
+                        Full 30-Parameter FNA Panel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Preset Description Banner (hidden by default) -->
+            <div id="preset-info-banner" class="hidden mb-6 no-print"></div>
+
+            <!-- Split Screen: Left (Input Form) | Right (Interactive Diagnostic Results) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column: Form (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="clinical-card p-5 bg-white">
+                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900">Cytological Feature Measurements</h2>
+                                <p class="text-xs text-slate-500">Fine needle aspirate digitized nuclear morphometry characteristics</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label for="patient-id-input" class="text-xs text-slate-500 font-medium">Patient ID:</label>
+                                <input type="text" id="patient-id-input" placeholder="e.g. PT-8423" class="form-control-clinical w-28 text-xs font-mono py-1">
+                            </div>
+                        </div>
+
+                        <form id="diagnosis-form">
+                            <!-- Container for Quick 10 Features -->
+                            <div id="quick-features-container">
+                                <div class="py-12 text-center text-slate-400 text-xs">Loading cytology features...</div>
+                            </div>
+
+                            <!-- Container for Full 30 Features (hidden by default) -->
+                            <div id="all-features-container" class="hidden"></div>
+
+                            <!-- Action Buttons -->
+                            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between no-print">
+                                <button type="button" id="btn-reset-form" class="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition">
+                                    Clear Form
+                                </button>
+                                <button type="submit" id="btn-submit-prediction" class="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs shadow-md hover:shadow-lg transition flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Perform Diagnostic Assessment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Column: Diagnostic Assessment Card (5 cols) -->
+                <div class="lg:col-span-5">
+
+                    <!-- Empty State Prompt -->
+                    <div id="empty-results-card" class="clinical-card p-8 bg-white text-center flex flex-col items-center justify-center min-h-[420px]">
+                        <div class="w-16 h-16 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800">No Assessment Conducted</h3>
+                        <p class="text-xs text-slate-500 max-w-sm mt-1 leading-relaxed">
+                            Enter the patient's FNA cytological measurements on the left, or select one of the representative clinical preset cases above to run an AI-assisted diagnostic evaluation.
+                        </p>
+                        <div class="mt-4 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+                            Wisconsin Diagnostic Model (SelectKBest ANOVA + Logistic Regression)
+                        </div>
+                    </div>
+
+                    <!-- Populated Results Card (hidden initially) -->
+                    <div id="diagnosis-result-card" class="clinical-card bg-white hidden overflow-hidden shadow-lg results-panel">
+                        
+                        <!-- Header banner -->
+                        <div id="result-header-box" class="p-5 bg-slate-800 text-white">
+                            <div class="flex items-center justify-between text-xs opacity-80 mb-2">
+                                <span>Patient Record: <strong id="result-case-id" class="font-mono font-bold">PT-1001</strong></span>
+                                <span id="result-timestamp">2026-11-03 12:00</span>
+                            </div>
+                            <div id="result-diagnosis-title">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-5 space-y-5">
+                            
+                            <!-- Probability Meter & Risk Tag -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-semibold text-slate-700">Malignancy Probability:</span>
+                                    <span id="result-risk-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold">
+                                        <!-- Risk tag -->
+                                    </span>
+                                </div>
+                                <div class="meter-container">
+                                    <div id="result-meter-fill" class="meter-fill bg-rose-600" style="width: 0%"></div>
+                                </div>
+                                <div class="flex justify-between text-[11px] font-mono text-slate-500">
+                                    <span>Benign Confidence: <strong id="result-prob-benign" class="text-emerald-700 font-bold">--</strong></span>
+                                    <span>Malignancy Confidence: <strong id="result-prob-malignant" class="text-rose-700 font-bold">--</strong></span>
+                                </div>
+                            </div>
+
+                            <!-- Clinical Recommendation Alert -->
+                            <div id="result-recommendation-box" class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                                <!-- Populated dynamically -->
+                            </div>
+
+                            <!-- Anomaly Warnings Box -->
+                            <div id="result-warnings-box" class="hidden"></div>
+
+                            <!-- Explainable AI (XAI) Biomarker Profile -->
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Explainable AI (XAI) Biomarkers</h4>
+                                    <span class="text-[10px] text-slate-400">vs Cohort Baselines</span>
+                                </div>
+                                <div class="overflow-x-auto max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-600 sticky top-0 border-b border-slate-200">
+                                            <tr>
+                                                <th class="py-2 px-3">Biomarker</th>
+                                                <th class="py-2 px-3">Value</th>
+                                                <th class="py-2 px-3">Benign Med</th>
+                                                <th class="py-2 px-3">Malignant Med</th>
+                                                <th class="py-2 px-3">Cohort Spread</th>
+                                                <th class="py-2 px-3">Indication</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="result-xai-table-body">
+                                            <!-- Rows populated dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Print / PDF Clinical Report Export -->
+                            <div class="pt-3 border-t border-slate-100 flex items-center justify-between no-print">
+                                <span class="text-[11px] text-slate-400">Printable medical record ready</span>
+                                <button type="button" id="btn-print-report" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center space-x-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                    <span>Print Clinical Summary</span>
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: BATCH TRIAGE SCREENING              -->
+        <!-- ========================================== -->
+        <section id="tab-batch" class="tab-content-section hidden">
+            <div class="clinical-card p-6 bg-white mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Population Batch Cytology Screening</h2>
+                        <p class="text-xs text-slate-500">Upload multiple FNA case records in CSV format for automated oncology risk triage.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <a href="/api/sample-csv" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center space-x-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span>Download Template CSV</span>
+                        </a>
+                        <button type="button" id="btn-load-demo-batch" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200">
+                            Load Wisconsin Demo Batch (5 Cases)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Drop Area -->
+                <div id="batch-drop-area" class="border-2 border-dashed border-slate-300 hover:border-sky-500 rounded-xl p-8 text-center cursor-pointer transition bg-slate-50/50">
+                    <input type="file" id="batch-file-input" accept=".csv" class="hidden">
+                    <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800">Drop your Wisconsin FNA CSV file here, or browse</h3>
+                    <p class="text-[11px] text-slate-400 mt-1">Supports standard CSV with Wisconsin breast cancer features (up to 1,000 cases)</p>
+                </div>
+
+                <!-- Loader Indicator -->
+                <div id="batch-loader" class="hidden py-8 text-center text-xs text-slate-600">
+                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-sky-600 mb-2"></div>
+                    <p>Executing model inference on batch records...</p>
+                </div>
+
+                <!-- Batch Summary Cards (hidden initially) -->
+                <div id="batch-summary-section" class="hidden mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <div class="text-[11px] font-bold text-slate-500 uppercase">Total Screened</div>
+                        <div id="batch-count-total" class="text-2xl font-black text-slate-900 mt-1">0</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-rose-50 border border-rose-200">
+                        <div class="text-[11px] font-bold text-rose-700 uppercase">High Risk (Malignant)</div>
+                        <div id="batch-count-malignant" class="text-2xl font-black text-rose-700 mt-1">0</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <div class="text-[11px] font-bold text-emerald-700 uppercase">Low Risk (Benign)</div>
+                        <div id="batch-count-benign" class="text-2xl font-black text-emerald-700 mt-1">0</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-amber-50 border border-amber-200">
+                        <div class="text-[11px] font-bold text-amber-700 uppercase">Borderline / Uncertainty</div>
+                        <div id="batch-count-indeterminate" class="text-2xl font-black text-amber-700 mt-1">0</div>
+                    </div>
+                </div>
+
+                <!-- Batch Table -->
+                <div id="batch-table-section" class="hidden mt-6">
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-100 text-[10px] uppercase font-bold text-slate-600 border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">Patient ID</th>
+                                    <th class="py-2.5 px-3">Diagnosis</th>
+                                    <th class="py-2.5 px-3">Malignancy Probability</th>
+                                    <th class="py-2.5 px-3">Clinical Risk Category</th>
+                                    <th class="py-2.5 px-3">Triage Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: MODEL ANALYTICS & VALIDATION        -->
+        <!-- ========================================== -->
+        <section id="tab-analytics" class="tab-content-section hidden">
+            <div class="space-y-6">
+
+                <!-- Performance Metrics Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div class="clinical-card p-4 bg-white text-center">
+                        <div class="text-[11px] text-slate-500 font-semibold uppercase">Testing Accuracy</div>
+                        <div id="metric-accuracy" class="text-2xl font-extrabold text-sky-600 mt-1">--</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Holdout 20% split</div>
+                    </div>
+                    <div class="clinical-card p-4 bg-white text-center">
+                        <div class="text-[11px] text-slate-500 font-semibold uppercase">ROC-AUC</div>
+                        <div id="metric-auc" class="text-2xl font-extrabold text-emerald-600 mt-1">--</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Discriminative Power</div>
+                    </div>
+                    <div class="clinical-card p-4 bg-white text-center">
+                        <div class="text-[11px] text-slate-500 font-semibold uppercase">Sensitivity (Recall)</div>
+                        <div id="metric-sensitivity" class="text-2xl font-extrabold text-rose-600 mt-1">--</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">True positive rate</div>
+                    </div>
+                    <div class="clinical-card p-4 bg-white text-center">
+                        <div class="text-[11px] text-slate-500 font-semibold uppercase">Specificity</div>
+                        <div id="metric-specificity" class="text-2xl font-extrabold text-teal-600 mt-1">--</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">True negative rate</div>
+                    </div>
+                    <div class="clinical-card p-4 bg-white text-center">
+                        <div class="text-[11px] text-slate-500 font-semibold uppercase">Precision (PPV)</div>
+                        <div id="metric-precision" class="text-2xl font-extrabold text-indigo-600 mt-1">--</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Positive predictive value</div>
+                    </div>
+                    <div class="clinical-card p-4 bg-white text-center">
+                        <div class="text-[11px] text-slate-500 font-semibold uppercase">F1-Score</div>
+                        <div id="metric-f1" class="text-2xl font-extrabold text-violet-600 mt-1">--</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Harmonic balance</div>
+                    </div>
+                </div>
+
+                <!-- 2-Column: Confusion Matrix & Model Specifications -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Confusion Matrix Visualizer -->
+                    <div class="clinical-card p-5 bg-white">
+                        <h3 class="text-sm font-bold text-slate-800 mb-1">Holdout Confusion Matrix (N = 114)</h3>
+                        <p class="text-xs text-slate-500 mb-4">Stratified 20% test partition performance evaluation</p>
+
+                        <div class="grid grid-cols-2 gap-3 max-w-sm mx-auto text-center font-mono">
+                            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                                <div class="text-[10px] text-emerald-700 font-bold uppercase">True Negative (TN)</div>
+                                <div id="cm-tn" class="text-2xl font-black text-emerald-800 mt-1">--</div>
+                                <div class="text-[9px] text-emerald-600 mt-0.5">Correct Benign</div>
+                            </div>
+                            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200">
+                                <div class="text-[10px] text-amber-700 font-bold uppercase">False Positive (FP)</div>
+                                <div id="cm-fp" class="text-2xl font-black text-amber-800 mt-1">--</div>
+                                <div class="text-[9px] text-amber-600 mt-0.5">Benign called Malignant</div>
+                            </div>
+                            <div class="p-4 rounded-xl bg-rose-50 border border-rose-200">
+                                <div class="text-[10px] text-rose-700 font-bold uppercase">False Negative (FN)</div>
+                                <div id="cm-fn" class="text-2xl font-black text-rose-800 mt-1">--</div>
+                                <div class="text-[9px] text-rose-600 mt-0.5">Malignant missed</div>
+                            </div>
+                            <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200">
+                                <div class="text-[10px] text-indigo-700 font-bold uppercase">True Positive (TP)</div>
+                                <div id="cm-tp" class="text-2xl font-black text-indigo-800 mt-1">--</div>
+                                <div class="text-[9px] text-indigo-600 mt-0.5">Correct Malignant</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-slate-50 rounded-lg text-xs text-slate-600">
+                            <strong>Clinical Significance:</strong> A low False Negative rate (FN = 4) ensures high sensitivity, preventing under-diagnosis of invasive malignancies, while FP = 1 prevents unnecessary biopsies.
+                        </div>
+                    </div>
+
+                    <!-- Pipeline & Retrain Card -->
+                    <div class="clinical-card p-5 bg-white flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 mb-1">Architecture & Pipeline Specifications</h3>
+                            <p class="text-xs text-slate-500 mb-4">Standardized machine learning pipeline steps</p>
+
+                            <ol class="space-y-2.5 text-xs text-slate-700">
+                                <li class="flex items-start space-x-2">
+                                    <span class="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">1</span>
+                                    <div><strong>Imputation:</strong> SimpleImputer(strategy='median') handles missing or omitted clinical values.</div>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <span class="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">2</span>
+                                    <div><strong>Feature Selection:</strong> SelectKBest(score_func=f_classif, k=10) selects the 10 top ANOVA-discriminating biomarkers.</div>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <span class="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">3</span>
+                                    <div><strong>Standardization:</strong> StandardScaler() standardizes features by removing mean and scaling to unit variance.</div>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <span class="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">4</span>
+                                    <div><strong>Estimator:</strong> LogisticRegression(max_iter=5000, random_state=42) produces calibrated probability scores.</div>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-xs text-slate-400">Model Artifact: models/breast_cancer_model.joblib</span>
+                            <button type="button" id="btn-retrain-model" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-900 text-white transition">
+                                Retrain & Refresh Model
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Feature Importance Ranking Table -->
+                <div class="clinical-card p-5 bg-white">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Top Statistical Diagnostic Biomarkers (ANOVA F-Score Ranking)</h3>
+                    <p class="text-xs text-slate-500 mb-4">Ranked by discriminative power between benign and malignant cell nucleus populations</p>
+
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-600 border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">Rank</th>
+                                    <th class="py-2.5 px-3">Biomarker Name</th>
+                                    <th class="py-2.5 px-3">ANOVA F-Score</th>
+                                    <th class="py-2.5 px-3">Pipeline Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feature-ranking-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: CLINICAL REFERENCE & PROTOCOL       -->
+        <!-- ========================================== -->
+        <section id="tab-about" class="tab-content-section hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="md:col-span-2 clinical-card p-6 bg-white space-y-4 text-xs leading-relaxed text-slate-700">
+                    <h2 class="text-base font-bold text-slate-900">Clinical Background: Fine Needle Aspirate (FNA) Cytopathology</h2>
+                    <p>
+                        Breast cancer is among the most prevalent malignancies globally. Fine Needle Aspiration (FNA) cytology is an established minimally-invasive diagnostic procedure utilized in the triple assessment (physical examination, mammography/ultrasound imaging, and cytology) of palpable breast masses.
+                    </p>
+                    <p>
+                        The Wisconsin Breast Cancer Diagnostic Dataset features were computed from a high-resolution digitized image of a fine needle aspirate (FNA) of a breast mass. They describe characteristics of the cell nuclei present in the image:
+                    </p>
+                    <ul class="list-disc list-inside space-y-1 pl-2 text-slate-800 font-medium">
+                        <li><strong>Radius:</strong> Mean of distances from center to points on perimeter.</li>
+                        <li><strong>Texture:</strong> Standard deviation of gray-scale values.</li>
+                        <li><strong>Perimeter & Area:</strong> Nuclear size parameters correlating with cellular hypertrophy.</li>
+                        <li><strong>Smoothness:</strong> Local variation in radius lengths.</li>
+                        <li><strong>Compactness:</strong> Perimeter² / Area - 1.0 (shape irregularity indicator).</li>
+                        <li><strong>Concavity:</strong> Severity of concave portions of the contour.</li>
+                        <li><strong>Concave Points:</strong> Number of concave portions of the contour.</li>
+                        <li><strong>Symmetry:</strong> Bilateral nuclear symmetry.</li>
+                        <li><strong>Fractal Dimension:</strong> "Coastline approximation" - 1 (boundary complexity).</li>
+                    </ul>
+
+                    <h3 class="text-sm font-bold text-slate-900 pt-2">Clinical Decision Support Triage Protocol</h3>
+                    <div class="space-y-2">
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                            <strong class="text-emerald-900">Low Risk (&lt; 25% Probability):</strong>
+                            Features resemble benign fibroadenoma or cystic changes. Standard routine screening per age protocol.
+                        </div>
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <strong class="text-amber-900">Indeterminate / Borderline Risk (25% - 60%):</strong>
+                            Elevated morphological atypia near decision boundaries. Recommended follow-up: Repeat FNA, core needle biopsy, or multidisciplinary review.
+                        </div>
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                            <strong class="text-rose-900">High Risk (&gt; 60% Probability):</strong>
+                            Significant nuclear enlargement, high concavity, and pleomorphism indicative of invasive carcinoma. Prompt histological confirmation and oncology referral advised.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clinical-card p-6 bg-white space-y-4 text-xs text-slate-700">
+                    <h3 class="text-sm font-bold text-slate-900">Project Architecture</h3>
+                    <div class="p-3 bg-slate-50 rounded-lg font-mono text-[11px] text-slate-800 space-y-1">
+                        <div>📁 backend/</div>
+                        <div class="pl-3">├── app.py (REST API)</div>
+                        <div class="pl-3">├── model_service.py (Inference & XAI)</div>
+                        <div class="pl-3">├── train.py (Reproducible Pipeline)</div>
+                        <div class="pl-3">└── data_utils.py (Definitions & Presets)</div>
+                        <div>📁 models/</div>
+                        <div class="pl-3">├── breast_cancer_model.joblib</div>
+                        <div class="pl-3">├── model_metadata.json</div>
+                        <div class="pl-3">└── feature_stats.json</div>
+                        <div>📁 frontend/</div>
+                        <div class="pl-3">├── templates/index.html</div>
+                        <div class="pl-3">└── static/ (css & js)</div>
+                        <div>📁 tests/</div>
+                        <div class="pl-3">└── test_api.py (Unit & Integration)</div>
+                        <div>📄 run.py (Unified Launcher)</div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100">
+                        <strong class="text-slate-900 block mb-1">Dataset Origin:</strong>
+                        <p class="text-slate-500">
+                            Dr. William H. Wolberg, W. Nick Street, Olvi L. Mangasarian. University of Wisconsin Hospitals, Madison.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 no-print">
+        <div class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between">
+            <div>
+                OncoVision AI Prototype &bull; Breast Cancer Clinical Decision Support System
+            </div>
+            <div class="mt-2 sm:mt-0 text-[11px]">
+                Built for Clinical Research & Machine Learning Exploration
+            </div>
+        </div>
+    </footer>
+
+    <!-- App JavaScript -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
