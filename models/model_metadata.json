@@ -1,0 +1,145 @@
+{
+  "model_name": "ANOVA SelectKBest + Logistic Regression Pipeline",
+  "trained_at": "2026-11-03 17:47:11",
+  "total_samples": 569,
+  "train_samples": 455,
+  "test_samples": 114,
+  "metrics": {
+    "accuracy": 0.956140350877193,
+    "train_accuracy": 0.9560439560439561,
+    "sensitivity_recall": 0.9047619047619048,
+    "specificity": 0.9861111111111112,
+    "precision": 0.9743589743589743,
+    "f1_score": 0.9382716049382716,
+    "roc_auc": 0.9973544973544974,
+    "log_loss": 0.09510076265755578,
+    "brier_score": 0.025806664346758375,
+    "confusion_matrix": {
+      "true_negative": 71,
+      "false_positive": 1,
+      "false_negative": 4,
+      "true_positive": 38
+    }
+  },
+  "all_features": [
+    "radius_mean",
+    "texture_mean",
+    "perimeter_mean",
+    "area_mean",
+    "smoothness_mean",
+    "compactness_mean",
+    "concavity_mean",
+    "concave points_mean",
+    "symmetry_mean",
+    "fractal_dimension_mean",
+    "radius_se",
+    "texture_se",
+    "perimeter_se",
+    "area_se",
+    "smoothness_se",
+    "compactness_se",
+    "concavity_se",
+    "concave points_se",
+    "symmetry_se",
+    "fractal_dimension_se",
+    "radius_worst",
+    "texture_worst",
+    "perimeter_worst",
+    "area_worst",
+    "smoothness_worst",
+    "compactness_worst",
+    "concavity_worst",
+    "concave points_worst",
+    "symmetry_worst",
+    "fractal_dimension_worst"
+  ],
+  "selected_features": [
+    "radius_mean",
+    "perimeter_mean",
+    "area_mean",
+    "concavity_mean",
+    "concave points_mean",
+    "radius_worst",
+    "perimeter_worst",
+    "area_worst",
+    "concavity_worst",
+    "concave points_worst"
+  ],
+  "feature_ranking": [
+    {
+      "feature": "concave points_worst",
+      "f_score": 733.724932573945,
+      "selected": true
+    },
+    {
+      "feature": "perimeter_worst",
+      "f_score": 717.2464871041375,
+      "selected": true
+    },
+    {
+      "feature": "radius_worst",
+      "f_score": 692.8613952605764,
+      "selected": true
+    },
+    {
+      "feature": "concave points_mean",
+      "f_score": 684.5268452011298,
+      "selected": true
+    },
+    {
+      "feature": "perimeter_mean",
+      "f_score": 548.4132358502844,
+      "selected": true
+    },
+    {
+      "feature": "area_worst",
+      "f_score": 522.1889466673216,
+      "selected": true
+    },
+    {
+      "feature": "radius_mean",
+      "f_score": 511.2748478447927,
+      "selected": true
+    },
+    {
+      "feature": "area_mean",
+      "f_score": 444.8575181970792,
+      "selected": true
+    },
+    {
+      "feature": "concavity_mean",
+      "f_score": 397.5920817649989,
+      "selected": true
+    },
+    {
+      "feature": "concavity_worst",
+      "f_score": 319.5077762009705,
+      "selected": true
+    },
+    {
+      "feature": "compactness_mean",
+      "f_score": 263.56432593680563,
+      "selected": false
+    },
+    {
+      "feature": "compactness_worst",
+      "f_score": 238.20372483361464,
+      "selected": false
+    },
+    {
+      "feature": "radius_se",
+      "f_score": 205.43320636942641,
+      "selected": false
+    },
+    {
+      "feature": "perimeter_se",
+      "f_score": 193.1689311220698,
+      "selected": false
+    },
+    {
+      "feature": "area_se",
+      "f_score": 180.56122943323336,
+      "selected": false
+    }
+  ]
+}
