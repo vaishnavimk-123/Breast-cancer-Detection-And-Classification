@@ -40,6 +40,14 @@ class BreastCancerModelService:
         self.all_features = []
         self._load_artifacts()
 
+    def _patch_model_compatibility(self):
+        """Ensures the loaded model step has all attributes expected by the runtime's scikit-learn version."""
+        if self.pipeline is not None and hasattr(self.pipeline, "named_steps"):
+            if "model" in self.pipeline.named_steps:
+                model_step = self.pipeline.named_steps["model"]
+                if not hasattr(model_step, "multi_class"):
+                    model_step.multi_class = "auto"
+
     def _train_fallback(self):
         """Train and persist model artifacts on-the-fly if missing or version-incompatible."""
         try:
@@ -77,14 +85,16 @@ class BreastCancerModelService:
             self._train_fallback()
             model_path = os.path.join(self.model_dir, "breast_cancer_model.joblib")
 
-        # Load pipeline using joblib (which transparently handles both joblib and pickle dumps)
+        # Load pipeline using joblib
         try:
             self.pipeline = joblib.load(model_path)
+            self._patch_model_compatibility()
         except Exception as load_err:
             print(f"Notice: Failed to load artifact ({load_err}). Retraining model in current environment...")
             self._train_fallback()
             model_path = os.path.join(self.model_dir, "breast_cancer_model.joblib")
             self.pipeline = joblib.load(model_path)
+            self._patch_model_compatibility()
 
         if os.path.exists(metadata_path):
             with open(metadata_path, "r", encoding="utf-8") as f:
@@ -198,15 +208,31 @@ class BreastCancerModelService:
         return analysis
 
     def predict_single(self, input_dict, patient_id=None):
+        """
+        Perform clinical prediction on single patient record.
+        """
         df_row, missing_count, warnings = self._prepare_feature_row(input_dict)
 
-        prob_array = self.pipeline.predict_proba(df_row)[0]
+        # Ensure compatibility across scikit-learn versions
+        self._patch_model_compatibility()
+        try:
+            prob_array = self.pipeline.predict_proba(df_row)[0]
+            prediction_class = int(self.pipeline.predict(df_row)[0])
+        except AttributeError as attr_err:
+            if "multi_class" in str(attr_err):
+                if hasattr(self.pipeline, "named_steps") and "model" in self.pipeline.named_steps:
+                    self.pipeline.named_steps["model"].multi_class = "auto"
+                prob_array = self.pipeline.predict_proba(df_row)[0]
+                prediction_class = int(self.pipeline.predict(df_row)[0])
+            else:
+                raise
+
         benign_prob = float(prob_array[0])
         malignant_prob = float(prob_array[1])
-        prediction_class = int(self.pipeline.predict(df_row)[0])
 
         diagnosis_label = "Malignant" if prediction_class == 1 else "Benign"
         risk_info = classify_risk(malignant_prob)
+
         explanation = self.explain_features(df_row.iloc[0].to_dict())
 
         malignant_drivers = [e["label"] for e in explanation if e["is_malignant_lean"]]
