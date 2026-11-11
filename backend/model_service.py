@@ -77,7 +77,7 @@ class BreastCancerModelService:
             self._train_fallback()
             model_path = os.path.join(self.model_dir, "breast_cancer_model.joblib")
 
-        # Load pipeline using joblib
+        # Load pipeline using joblib (which transparently handles both joblib and pickle dumps)
         try:
             self.pipeline = joblib.load(model_path)
         except Exception as load_err:
@@ -118,6 +118,11 @@ class BreastCancerModelService:
         return self.feature_stats
 
     def _prepare_feature_row(self, input_dict):
+        """
+        Ensures all 30 features expected by the pipeline exist.
+        If a feature is omitted (e.g. from 10-biomarker quick mode),
+        it is imputed with the baseline population median.
+        """
         row = {}
         missing_count = 0
         validation_warnings = []
@@ -147,6 +152,10 @@ class BreastCancerModelService:
         return df_row, missing_count, validation_warnings
 
     def explain_features(self, input_row):
+        """
+        Provides Explainable AI (XAI) insights:
+        Compares input values against benign and malignant cohort statistics.
+        """
         analysis = []
         for feat in self.selected_features:
             val = float(input_row.get(feat, 0.0))
